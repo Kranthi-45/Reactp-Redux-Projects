@@ -1,0 +1,214 @@
+==================================================== Firebase setup ====================================
+
+open firebase in browser https://firebase.google.com/
+siginin with google  -> go to console -> add project -> enter details  -> database -> Realtime -> rules(put true both)
+Project Overview -> click this symbol  </>(add fb to webapp) & copy configuration & paste in ou rprject
+
+####npmcmds####
+npm install firebase@4.8.2
+
+npm install redux-thunk@2.2.0
+
+--> thunk is middleware betwwen actions & reducers
+
+In Index.js  -->                                      // applying middlewar using applyMiddleware(thunk) 
+----------
+	import {createStore, applyMiddleware} from 'redux'	
+	const store = createStore(rootReducer, window.__REDUX_DEVTOOLS_EXTENSION__ && window.__REDUX_DEVTOOLS_EXTENSION__(), applyMiddleware(thunk))
+
+Create config.js
+In config.js  -->
+---------
+
+  import firebase from 'firebase/app';
+  const config = {															//all this copied from web firebase & pasted here in js file
+    apiKey: "AIzaSyASi5NVz2YV5in4XH7vbrr9jBfafp_KeaQ",
+    authDomain: "photowall-dd19e.firebaseapp.com",
+    projectId: "photowall-dd19e",
+    storageBucket: "photowall-dd19e.appspot.com",
+    messagingSenderId: "384366132539",
+    appId: "1:384366132539:web:2df9ed40bc4708b677cb1e"
+  };
+
+  // Initialize Firebase
+  firebase.initializeApp(config);
+  const database = firebase.database();
+
+  export {database}
+
+In action.js  -->
+---------
+	import {firestore} from '../database/config'
+	
+	export function startAddingPost(post) {												// adding post to databse & then calling addpost & update state
+    		return (dispatch) => {
+        		return firestore.collection('posts').add({[post.id]: post}).then(() => {
+            		dispatch(addPost(post))												// updating state after data is added to db successfully
+        		}).catch((error) => {
+            		console.log(error)
+        		})
+    		}} 
+	
+	export function addPost(post) {													// updating state
+    		return {
+        		type: 'ADD_POST',
+        		post
+    		}
+	}
+
+
+**--------------------------------------------------------------------------------
+*** when we navigated to single component which has photo & comment  from Main/photowall component , it will display the post but when u refresh it wont display the post because
+it is refreshed data is gone & fetch again in <Main> but before that singlejs render will happens (but not navigated from single component actually)
+
+	posts data present in Main.js file, but when we refresh single.js  first render funtion of singlejs immediately invoke <photo/> that which uses posts data inside it but, at that time it doesn't have data means not loaded in Main.js in componentDidMount() ......so we need to make wait little by using if cond & then render the comp to avoid error as below
+
+*** when u delete post in singlejs page & comes to main page, after that when we click back button again to go back to singlepagejs throws error because we are navigating to prev deleted post so the prev deleted post is not present rite now so throws undefined ...... so fixed below see
+
+In Main.js -->
+---------
+   class Main extends Component {
+ 
+    state = { loading: true }														// loading appears untill fetch posts data from db
+
+    componentDidMount() {
+        this.props.startLoadingPost().then(() => {
+            this.setState({loading: false})											// after fetching removing load & displaying posts
+        })
+        this.props.startLoadingComments()
+    }
+
+	render() {
+	       <Route exact path="/single/:id" render = {(params) => (
+                <Single  loading={this.state.loading} {...this.props} {...params}/> 				// pass loading props to child
+            )}/>
+	}
+
+In Single.js -->
+-----------
+
+class Single extends Component {
+    render() {
+        const {match, posts} = this.props
+		...
+        const index = this.props.posts.findIndex((post) => post.id === id)
+        if (this.props.loading === true) {
+            return <div className="loader"> ...loading </div>			// appears load untill main comp loads data , so it will not enter <photo> comp till then
+        } else if (post) { 										
+
+            return <div className='single-photo'>					// after Main  componentDidMount() is done, then loader bcomes false & enters else block for <photo/>		
+                 <Photo post={post} {...this.props} index={index}/>
+                 <Comments startAddingComment={this.props.startAddingComment} comments={comments} id = {id}/>
+                 </div> 
+        } else {
+            return <h1> ...no post found </h1>				// when we navigate to singlejs page using back button after deleting post then enters else becoz it is undefined
+        }
+          
+    } 
+}
+
+In AddPhoto.js  -->                           // normally wherever we called normal action methods directly now call this start...() DB update methods & in that call action methods
+-------------
+	    handleSubmit(event) {
+		//this.props.addPost(post)												// insted of updating the state first, call the database method intially then
+            this.props.startAddingPost(post)											// - inside db success added call addPost for state update
+        	}
+
+
+
+Final action.js file ---->
+			
+	import {firestore} from '../database/config'
+export function startAddingPost(post) {
+    return (dispatch) => {
+        return firestore.collection('posts').add({[post.id]: post}).then(() => {
+            dispatch(addPost(post))
+        }).catch((error) => {
+            console.log(error)
+        })
+    }
+} 
+
+export function startLoadingPost() {
+    return (dispatch) => {
+        return firestore.collection('posts').get().then((snapshot) => {
+           let posts = []
+           snapshot.forEach((childSnapshot) => {
+            posts.push(childSnapshot.val())
+           })
+           dispatch(loadPosts(posts))
+        }).catch((error) => {
+            console.log(error)
+        })
+    }
+}
+
+export function startRemovingPost(index, id) {
+    return (dispatch) => {
+        return firestore.ref(`posts/${id}`).remove().then(() => {
+            dispatch(removePost(index))
+         }).catch((error) => {
+             console.log(error)
+        })
+    }
+}
+
+export function startAddingComment(comment, postId) {
+    return (dispatch) => {
+         return firestore.ref('comments/'+postId).push(comment).then(() => {
+             dispatch(addComment(comment, postId))
+         }).catch((error) => {
+             console.log(error)
+         })
+    }
+}
+
+export function startLoadingComments() {
+    return (dispatch) => {
+         return firestore.ref('comments').once('value').then((snapshot) => {
+             let comments = {}
+             snapshot.forEach((childSnapshot) => {
+                 comments[childSnapshot.key] = Object.values(childSnapshot.val())
+             })
+             dispatch(loadComments(comments))
+         })
+    }
+}
+
+export function loadComments(comments) {
+    return {
+        type: 'LOAD_COMMENTS',
+        comments
+    }
+}
+
+
+export function removePost(index) {
+    return {
+        type: 'REMOVE_POST',
+        index
+    }
+}
+
+export function addPost(post) {
+    return {
+        type: 'ADD_POST',
+        post
+    }
+}
+
+export function addComment(comment, postId) {
+    return {
+        type: 'ADD_COMMENT',
+        comment,
+        postId
+    }
+}
+
+export function loadPosts(posts) {
+    return {
+        type: 'LOAD_POSTS',
+        posts
+    }
+
+}

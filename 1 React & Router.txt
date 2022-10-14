@@ -1,0 +1,460 @@
+======================================================================================= React Intro =================================================================================== 
+
+Used to create user experiance
+all individual sub compon ombines & Togather becomes complex component known as 
+compotional model.
+ Virtual Dom. react take care of creating nodes for each element to render in real dom.
+
+Create-react-app:
+Babel : 
+https://babeljs.io/
+we are using es6 for react & to make & compile es6 js code to es5  bundle for all browser compatabale we need it
+
+
+HtmlWebPackPlugin:
+https://webpack.js.org/plugins/html-webpack-plugin/
+ All wire code to bundle, convert react code to es5 bundle for browser comptable
+
+Steps:
+###--npmcmds--###
+npm install -g create-react-app    
+cd Desktop/
+create-react-app photowal;
+
+following get install by above steps:
+
+React:
+React-dom : responsible for rendering our webpage
+React-scripts: 
+->it installs babel first(es6 to es5)
+->also install module webback bundle (to bundle all files to single file for build)
+-> webpack-dev-server - to host app
+   (in nodejs the express server used to host out app )
+--> simply install & do all configuration for us
+
+npm ERR! Please try running this command again as root/Administrator.
+Then to run a command with administrative privileges, feel free to write sudo  right before executing it, that is:
+
+###--npmcmds--### 
+sudo npm install -g create-react-app
+
+###--npmcmds--### 
+npm start  (to run react prj)
+
+ex:::::::::::::::::::::::::::::::::::::::::::::
+
+const element = React.createElement('h1',null,"Hello World!");       (to creat react elements import React)
+ReactDOM.render(element ,doc.getElbId('root'))                (to render elemtn import react-dom)
+
+<div> id="root" > 
+  it is a reference template 
+
+</div>
+ex:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::  for list of elements
+const element = React.createElement('ol',null,
+                                    React.createElement('li',null,"item1");
+                                    React.createElement('li',null,"item2");
+                                    React.createElement('li',null,"item3");
+);
+
+const task = ['item1','item2','item3']
+const element = React.createElement('ol',null,
+  							tasks.map((task,index) => React.createElement('li', {key : index}, task);)
+);
+
+
+** when there is child element used iterator in array (map) should pass unique key prop for each element or else gets error
+
+
+JSX :  to avoid using .creatElement for creating html elements we simply use jsx syntax to simply the code & it's similar to html code only(need inlude html code in one parent elem only)
+-----
+  ** to use js code/expression in html in jsx syntax( ` { task[0] } `) enclose js code in curly braces.	  
+
+ex1:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::  for list of elements using jsx
+
+const task = ['item1','item2','item3'];
+const element = <ol> 
+        		{ tasks.map((task,index) => <li key = { index } > { task } </li> }
+  		   </ol>
+
+** background jsx code converts to js code with React.creatElement syntax with transpilers installed in react proj 
+** all elements should be enclosed between single jsx means single div or element because to render the html code to single root element(single root elem render single node /jsx)
+  if there are multiple div elements at parent so reeact gets ambuguise to render which  div element & throws error so please wrap in single parent while rendering to UI.
+
+
+
+ex2 ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: list of elements using class component method
+
+const task = ['item1','item2','item3'];                            
+class List extends Component { 
+	render() {
+		 return (   <ol> 
+        		        // { tasks.map((task,index) => <li key = { index } > { task } </li> }
+ 				     { this.props.tasks.map((task,index) => <li key = { index } > { task } </li> }
+  		            </ol>
+	              )   
+       }
+} 
+
+class Title extends Component { 
+	render() {
+           return  <h1> Task List </h1>
+				// <h1> this.props.title </h1>
+	}
+} 
+
+class Main extends Component { 
+	render() {
+		  <div>
+              	 <Title title ={'toDos'}/>
+                   <List/>
+                   <List/>         /** like this we can reuse List comp to display multiple times & now only displays same list values miltiple time & to make dynamic pass List props*/         
+                   
+                   <List {task = ['item1','item2','item3']}/>         /** we need to use  props & to access this props in List componet need to use this.props in its List component         
+   
+              </div>
+	}
+} 
+
+
+-> use this ( ) for return statement when there is js code in between html code 
+-> this  -> this it will points to component instance that is being rendered
+ 
+
+ eg ::::::::::: -> The facebook post all are similar because all are instance of same component but details will be diff becoz will pass diff data for diff comp instance from props.
+
+
+===================================================================================== React - State Management ========================================================================== 
+
+
+
+@font-face:{
+	font-family:
+	src : url()
+}
+--> font-face for to install new fonts that are not available by default
+
+
+ <div className="photoGrid">
+  	<figure className="figure">
+        <img className="photo" />
+      </figure>
+  	<figure className="figure">
+        <img className="photo" />
+      </figure>
+  	<figure className="figure">
+        <img className="photo" />
+      </figure>
+ </div>
+
+.photoGrid{
+    max-width: 1000px;
+    margin: 0 auto;
+    display: flex;
+    flex-wrap: wrap;                        (flex-directoin: row : make overflow all items in same row if it is small width as well, so need to apply wrap to not to overflow)
+} 
+
+.figure {
+    flex-basis: calc(33.333% - 4rem);        (how much percent of parent width to take for each flex item )
+    border: 1px solid #d3d3d3;
+    padding: 2rem;
+    flex-grow: 1;                            (if there are 3 photos, 3rd photo take total width in second row)
+    margin: 0 2rem 2rem 2rem;        
+}
+
+.photo {
+    width: calc(100% + 4rem);
+    margin: -2rem 0rem 0rem -2rem;
+}
+
+---> above csss for displaying items in row & coloumn dynamically 
+
+Index.js   -> Render(</Main>, rootElem)
+Main       -> <Title/> <Photowall posts={posts}>   all posts passed to photowall
+photowall  -> It will loop each photo by using map & generate <photo post={post}/> component instance  . each post should be passd as props to display in ui 
+photo      -> will write img, title, img description code using html elemt & render it .............we use this.props to access the props 
+
+ex3 ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: list of elements using Funtional component
+
+-> Before we used to access props based on class comp instance using this keyword. -> statefull components
+-> Now the export value will be the stateless funtion not class need to access using funtion arguments(func takes props as arguments), dont need to worry about at which context the component is invoked because there is no this keyword anymore.
+   eg: funtion Photowall(props){
+             
+            // this.props.post                    -> instead like this we directly use funtion arguments to access  see next line
+               props.post
+    	 }
+
+
+Props: are read only immutable date
+
+ex: 4 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: state in class based component
+
+Class Main {
+   constructor(){
+   	super()
+	this.state = {
+		posts : [
+                     {item1},{item2},{item3}
+			  ]
+	}
+   }
+   
+ 	render(){ 
+ 			// <photowall posts={this.posts} />         prev when posts are declared outside of state & constructor
+    			<photowall posts={this.state.posts} />	  to know reeact somthing is updated need to use in state to rerender the component again with new data
+    }
+ }
+
+Remove : Data is there in <Main/> component & remove Button is present in child component <photowall/> -> <photo/> comp
+  Main.js  
+           constructor(){
+     		  this.state = {posts : [data]},
+	        this.removePhoto = this.removePhoto.bind(this)
+           } 
+            removePhoto(postRemoved){                    // actual method to remove posts in Main & pass this method as props to photwall child
+               console.log(postRemoved.description);
+	         this.setState((state) => ({                  // here state means current state of component before updateing the component
+               	posts :  state.posts.filter(......)
+               }));
+            }
+             
+            render() {
+          			<Photowall posts={this.state.props} onRemovePhoto={this.removePhoto} /> 
+                               |
+ photowall.js           <photo onRemovePhoto={props.onRemovePhoto} />
+                                | 
+ photo.js               <button onClick={() => {props.onRemovePhoto(post)}}
+
+
+---> when u click removebutton in UI, it will throw error as this.setState is not a funtion in removePhoto() method this is becoz
+	Inside remove method "this" context is not defined
+      "this" in render() points to comp instance that is render into dom
+      "this" in constructor() also works fine points to current instacne class component & upating the current state
+      "this" in removeMethod it points to null becoz not bound to our component (our class comp has state , this is not bounded to our component so cannot access comp state as well)
+          -> "this" is now in the context of the funtion not the comp (this is known by default in functions)
+             to restore this context to comp we need to bind "this" in constructor to make it has context of comp
+    
+  eg ::::::::::::::  -->      this.removePhoto = this.removePhoto.bind(this)
+
+
+ex: 5 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: prop Types
+ 
+It defines what specific types of props should passed to comp like array, obj, func, string...etc & we can defin proptypes to any child components
+
+###--npmcmds--###
+npm install --save prop-types@15.5.7  
+
+Main.js
+Photwall.js  --> import PropTypes from 'prop-types'
+                   
+                   Photowall.propTypes = { 
+                   	posts: PropTypes.array.isRequired,                  // PropTypes.object
+				onRemovePhoto: PropTypes.func.isRequired, 
+                   }
+
+ex: 6  :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: Life cycle methods
+
+-> should not rite any asynchronous logics like api's fetch in render or constructor( constructor used for only binding method context or to set intial state as empty/default value)
+-> ajax requests or any async call should be done after Ui is rendered or component is mounted
+
+componentDidMount(){           // called only once on initial component is mounted & view is rendered on UI
+}
+
+componentDidUpdate(prevProps, prevState){       // called everytime whenever component is mounted & view is rerendered on UI when change in state is detected.
+   console.log(prevState.posts);                // can access prev props & prev states in this lifecycle method
+   console.log(thi.state.posts);
+}
+
+-> side-effect: modifying the state of something else outside of its scope. We'll consider asynchronous calls a side effect,
+constructor() : called before component is mounted , no side effect code
+componentWillMount(): invoked immediately before mounting occurs.called before rendered.
+componentDidMount(): after mounting & render
+render(): never fetch data, should only be used to return elements.
+componentDidUpdate(): when state of comp changes. update Ui & network calls
+
+
+======================================================================================= React Router =================================================================================== 
+
+React Router is used to generate SPA, SPA means it download entire content/ui all at once in single request, so wheneever user navigates diff pages in app,
+ the browser already has access to all of its context of next page & it doesn't need to request again server & refresh the page.
+
+CSS:
+  <button> + </button>
+
+.addIcon{
+    margin: 20px auto;    // margin auto doesn't make buttons center only works on block elem & tables.
+    display: table;
+    padding: 40px;
+    background: url("https://cdn-icons-png.flaticon.com/512/1828/1828919.png") center no-repeat;
+    background-size: contain;   // it will make image exactly set to container width without scaling
+    border: none;
+}
+
+
+
+Routing Type 1( without React-Router - state controll navigation):::::::::::::::::::::::::::::::::::::::::::::::::
+---------------    to update navigation dynamically without hardcode need to create one method(navigate()) in Main.js file & pass it has props to child comp
+ 
+Photowall child comp -> has add photo event handler                 
+           
+    <button onClick={props.onNavigate}>                       // we used props because it is funtional comp
+    <a className = "addIcon" href="#AddPhoto"> </a> 
+    <photo/>                                                  // we call photo comp to generate 3 photos
+
+Main comp -> has actual state 
+  
+     constructore(){ 
+            this.state ={ screen = 'photos'}
+         
+     }
+    
+      navigate(){
+    	   this.setState({
+	    	screen : 'addPhotos'
+	   })
+      }
+
+     render(){
+           <>
+              {
+               	this.state.screen == 'photos' && (
+                 	<div>
+
+                  	<Photowall posts={this.state.props} onRemovePhoto={this.removePhoto} onNavigate={this.navigate}/> 
+                 	</div>       
+                 )
+              }
+
+              {
+               	this.state.screen == 'addPhotos' && (
+                 	<div>
+                  	<AddPhoto/>
+                 	</div>       
+                 )
+              }
+           <>
+     }
+
+
+// above navigation using js operators 
+	<button onClick={props.onNavigate}>  -->  <a onClick={props.onNavigate} href="#AddPhoto"> </a>
+      url: localhost:3001                  -->  url: localhost:3001/#AddPhoto
+** now we change above button to anchor tag & href attr, when we click it changes URL & adds URl fragment(with #) to indicate which comp it is navigating to
+** the back button will not navigate to prev, becoz url & ui is not in sync, so that's why we have React-router to keep track of URL changes in browser.
+
+Routing Type 2:::::::::::::::::::::::::::::::::::::::::::::::::
+
+	Browser Router --> Keep track of all url changes in browser
+	Link           --> change in the url upon click based on url we have below Route which containe given path
+	Route          --> to this path has own Ui to display
+
+
+###--npmcmds--###
+npm install react-router-dom@4.2.2
+
+ex: 8  :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: Back bUTTON ISSUE
+** Browser router solves prev back button issue
+
+--> Index.js
+		import {BrowserRouter} from 'react-router-dom'
+		ReactDOM.render(<BrowserRouter><Main/></BrowserRouter>, document.getElementById('root'))        // we wrapped whole comp in browser router to track url changes
+
+--> Photowall.js  
+		import {Link} from 'react-router-dom'
+		<Link className = "addIcon" to="/AddPhoto"> </Link>                  // need to chnage "a href" to "Link to" -> Link is incharge to change the url in browser on click
+
+--> Main.js 
+		import {Route} from 'react-router-dom'
+   		
+		render() {
+        		return ( 
+        			<div>
+            			<Route exact path = "/" render={() => {
+                				return( <div>
+                      					<Title title={'Photowall'}/>
+                      					<PhotoWall posts={this.state.posts} onRemovePhoto={this.removePhoto} onNavigate = {this.navigate}/>
+                 					</div> )
+            			 }}/> 
+            			<Route path= "/AddPhoto" component={AddPhoto}/>
+         			</div>
+        	        )}
+
+ ** Instead of using state to navigate now we need use Route for navigation.
+ ** When u click on Link it will changes the url of browser & which matches to path of route then it redirected to particular component
+ ** <Route exact path = "/" render={() => {}} />              // use render() when we want multipl component to render   
+ ** <Route path= "/AddPhoto" component={AddPhoto}/>		  // use component() when we want render single component.
+
+
+CSS: to create form in center 
+----
+.form  {
+    background: white;
+    margin: 0 auto;
+    max-width: 360px;
+    padding: 45px;
+    text-align: center;
+}
+
+.form input {
+    font-family: sans-serif;
+    background: #f2f2f2;
+    width: 100%;
+    border: none;
+    padding: 15px;               // padding will include in width 100% & also width get increses
+    box-sizing: border-box;      // to make padding should not occupy width length use border-box , if not bydeault takes content-box
+    font-size: 14px;   
+    margin: 0 0 15px;
+}
+
+ex: 9  ::::::::::::::::::::::::::::::::::::::::::::::::: Creating AddPhoto page component 
+
+AddPhoto.js -->   create form & save the details using name attribute & handleSubmit click event
+			the form & submit button in Addphoto child component, but data should save & add to Main component where post data is present, we should call using props
+			
+ 
+   handleSubmit(event) {
+        event.preventDefault();
+        const post = {
+            id: Number(new Date()),
+            description:  event.target.elements.description.value
+            imageLink: i event.target.elements.link.value
+         }
+         this.props.onAddPhoto(post)
+    }
+   
+   render() {
+        return (
+        <div className="form">
+          <form onSubmit={this.handleSubmit}> 
+               <input type ="text" placeholder="Link" name="link"/>
+               <input type ="text" placeholder="Desciption" name="description"/>
+               <button> Post </button>
+          </form>
+    	</div>
+    )}
+
+Main.js  -->
+	
+   addPhoto(postSubmitted) {
+        this.setState(state => ({
+            posts: state.posts.concat([postSubmitted])
+        }))
+    }
+
+  render() {
+        return ( 
+        	<div>
+            	<Route path= "/AddPhoto" render = {({history}) => (
+                		<AddPhoto onAddPhoto={(addedPost) => {
+                    		this.addPhoto(addedPost)
+                    		history.push('/')
+                		}}/>
+            	)}/>
+         	</div>
+        )}
+
+** we are using history in render(), eg: render = {({history}) => ( history.push('/') )}, after submitting form it will redirct directly to / path means Main component
+
+
+
+

@@ -1,0 +1,416 @@
+============================================================================== Redux ===================================================================
+===========================================We emit an action, that action is submitted to reducer, then based on reducer will return updated state ================================
+
+Redux : we can manage states our application using redux & it is opensource react js library & allows better management of our application state
+       *** To keep our state predictable & centrailzed as single store & only pure func called Reducers are allowed to change the state.
+
+Manageing the state of our application is done in two ways :
+	1) BY Component state or  
+	2) By Redux
+
+ --> when deep nested child comp requires state from parent, then need to pass as props through all intermediate comp untill that child reaches which doesn't require state as well, 
+	so it is not good way, it will becom more interconnected & hard to scale & also hard to use the nested props as well 
+ --> To avoid above issue's we use Redux. so we update data from anywhere in our app& use it(by injecting store where we need & use the state we want.) 
+
+###--npmcmds--### 
+npm install redux@3.7.2
+
+--> In the prev ex component state of our app is mutabel  --- STATE is writtable
+-->  STATE in redux is read Only -- immutable
+     Now we cannot change the state easily using component in redux , only pure funtion i,e reducers are able to change state that lives inside of our store
+          			request
+           component ---------------> reducer
+
+3 Main Parts of Redux:  store, action, reducer
+-----------------
+	Store : entire app data lives inside store      <- ->
+      Action : for dispatching the action by store what to do like update. remove, add the state     <- ->
+      Reducer : then after receiving action dispatch then reducer will update the state of our applicaiton in store.(store data always populated by reducer) <- ->
+
+============================================================================== Reducer & Store ===================================================================
+
+ex 10 ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+Need to create reducers for each distinct peace of state. (we have only one state "posts" in current example)
+Create => redux Folder 	
+		=> reducer.js
+
+-> index.js
+	import {createStore} from 'redux'
+	const store = createStore(rootReducer);
+
+-> reducer.js
+	import _posts from '../data/posts'                                                           // this json data we intializing while laod of website
+	function posts(state = _posts, action) {
+
+      }
+      export reducer
+
+** Now react doesn't know about redux store because it is not connected with our app we need to connect with react-redux-binding.
+** to connect react & redux install below 
+
+###--npmcmds--### 
+npm install react-redux@5.0.6
+
+Provider: (provide store to child components)
+--------
+** How we pass props to child component  similarly
+** In redux if want to update the state in the store we need to pass that store to specific component & so it is easily done with the help of "Provider"
+    gives the ability of store directly to the any component as well 
+
+Extension : https://chrome.google.com/webstore/detail/react-developer-tools/fmkadmapgofadopljbjfkapdkoienihi or react dev tools  (add this ext to browsers)
+  now u can see react tab in chrome dev tools
+
+-> index.js
+	import {Provider} from 'react-redux'
+
+	const store = createStore(rootReducer)
+	ReactDOM.render(<Provider store={store}><BrowserRouter><Main/></BrowserRouter></Provider>, document.getElementById('root'));
+
+ex 11 ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+Now we have Provider that has store, but need to connect with the <Main/> to use the state by injecting directly store wherever we need 
+for that create  App.js file to make Main as connected Main with the store.
+
+-> index.js
+	import {Provider} from 'react-redux'
+
+	const store = createStore(rootReducer)
+	ReactDOM.render(<Provider store={store}><BrowserRouter><App/></BrowserRouter></Provider>, document.getElementById('root')); // here <Main/> is replaced with <App/>(connected Main)
+
+
+-> App.js file (connected Main)                             
+	import {connect} from 'react-redux'
+	function mapStateToProps(state) {            // this is how we injecting store to Main component we can do this directly in Main.js also & by this we can acces state as props.post
+    		return {
+        		posts: state
+    		}
+	}
+
+	const App =connect(mapStateToProps)(Main)
+	export default App
+
+<App/> is not dom it is just container provide data as props to presentational component known as <Main/>
+By rendering both Container(app) & presentational(main) comp we get connected <Main/> component
+
+--> if we want same state post also to child <photo/> comp just we need to pass as props from main becoz it is not too nested, suppose if photo component is deeply nested from main
+	then inject store to <photo> directly & make photo as connected(<photo>) component as above how we done for App.js connected Main component.
+
+============================================================================== Action ===================================================================
+Action : is just a js object that describe the event that should happen to update the application state & also pass little payload data w.r.t event name.
+
+crete file
+-> Action.js 
+		
+	export function removePost(index) {
+    		return {
+        		type: 'REMOVE_POST',
+        		index
+    		}
+	}
+
+we called above as Action Creators: becoz we clened the actions & made as simple js object & that returns action called Action creators
+after above use console.log(this.props)  in <Main/> u will get dispatch() also with states() attribute 
+so now we need create mapdispatchToProps() method also mapstateToProps() as we prevsly done
+reducer.js  -> states -> access using :  props.posts  now // else instead use as this.state.posts
+action.js   -> dispatch  -> access using  : props.removePost(1) now  // else instead we will use as this.props.dispatch(removePost(1));
+ 
+so both reducers states & dispatch action need to map in App.js like below for simplicity access as described in above points
+
+In App.js -->
+
+      import {bindActionCreators} from 'redux'
+	import * as actions from '../redux/actions'
+	import {withRouter} from 'react-router'
+	function mapStateToProps(state) {
+    		return {
+        		posts: state
+    		}
+	}
+
+	function mapDispatchToProps(dispatch) {
+    		return bindActionCreators({removePost}, dispatch)                        // need to bind removePosts() & dispatch so it will emit the remove() when called with dispatch
+	}
+
+	const App = withRouter(connect(mapStateToProps, mapDispatchToProps)(Main))      // we need to connect with top level comp
+	export default App
+
+In photo.js -->
+	
+	function Photo(props) {
+               <button onClick = {() => {
+                    props.removePost(props.index)l;                                  dispatching the actions 
+                    props.history.push('/');
+                }}
+	}
+
+** The redux Store is present in <Main/> that has props containing states, dispatches, so u can pass entire props down to child has spread operator instead passing as single props
+   {...this.props}    //es6 syntax
+
+Now action is dispatching & so reducer need to send updated current state. so in below redux not change the state real just it will send the updated state instead modifying.
+
+reducer.js ---> 
+
+	function posts(state = _posts, action) {
+    		switch (action.type) {
+        		case 'REMOVE_POST': return [...state.slice(0, action.index), ...state.slice(action.index + 1)]
+        		default: return state
+   		 }
+	}
+
+============================================================================== some extre imp points ===================================================================
+** generally react-router & redux work fine together however while connecting comp to redux store(with connect), then component stops updating the location change.so fix is below
+ enclose connect Main inside " withRouter() "
+
+ex 12 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+In App.js -->
+
+	import {withRouter} from 'react-router'
+	const App = withRouter(connect(mapStateToProps, mapDispatchToProps)(Main))
+
+Now we create AddPost action in action.js file
+
+In action.js --> 
+-----------
+	export function removePost(index) {})
+ 
+	export function addPost(post) {                                // addpost
+    		return {
+        		type: 'ADD_POST',
+        		post
+    		}
+	}
+
+In reducer.js ---> 
+------------
+	function posts(state = _posts, action) {
+    		switch (action.type) {
+        		case 'REMOVE_POST': return [...state.slice(0, action.index), ...state.slice(action.index + 1)]
+        		case 'ADD_POST': return [...state, action.post]        // addpost
+        		default: return state
+   		 }
+	}
+
+In AddPhoto.js -->
+-----------
+ 	handleSubmit(event) {
+			..
+            	this.props.addPost(post)                           // emit the action & call method name in action.js file not reducer
+	..}
+
+In App.js  -->
+---------
+	import * as actions from '../redux/actions'
+	function mapDispatchToProps(dispatch) { 
+		//return bindActionCreators({removePost}, dispatch)   
+    		return bindActionCreators(actions, dispatch)              // change {removePost} static declation to actions.. so all actions will get connected & used to dispath action
+	}
+	const App = withRouter(connect(mapStateToProps, mapDispatchToProps)(Main))
+
+ex 13 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: History props reduntant
+
+{onHistory=history } passed from the main component to the addPhoto component &  used as this.props.onHistory.push('/')in addPhoto comp.
+
+**Main comp connected with store in <BrowserRouter> inside of it's props, Main  has access to the history prop as "this.props.history". becox we already passing  {...this.props} down to addPhoto so we can simple use as
+  							"this.props.history"
+
+
+
+==================================================== Install redux dev tools (tracking redux actions & states easily)===================================================================
+
+Search react dev tools & open second appeared github link to download ext
+  or
+ hit this in chrome https://github.com/zalmoxisus/redux-devtools-extension 
+extention url  & install : https://chrome.google.com/webstore/detail/redux-devtools/lmhkpmbekcpmknklioeibfkpmmfibljd
+
+we need to add above extension in our store, to work with redux store using the redux dev tool extentison or else shows no store found while inspect in react dev tools
+
+In index.js -->                            // add this " window.__REDUX_DEVTOOLS_EXTENSION__ && window.__REDUX_DEVTOOLS_EXTENSION__() " to store
+ 
+const store = createStore(rootReducer, window.__REDUX_DEVTOOLS_EXTENSION__ && window.__REDUX_DEVTOOLS_EXTENSION__())
+
+
+
+=====================================================================          Adding Comments  section       ===================================================================
+
+When we click on photo it should take to other comment page & shows to respective & comment section to add comments
+
+ex 14 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: Adding comment 
+
+In Photo.js  -->
+
+	function Photo(props) {
+    			const post = props.post
+    			return <figure className="figure"> 
+                			<Link to={`/single/${post.id}`}> <img className= "photo" src={post.imageLink} alt={post.description}/></Link>         // add in link ; to = {${id}}
+					.....        		
+         			</figure>
+			}
+
+In Main.js   -->                     			 						// add route & pass route params to use route params in file below; path="/single/:id"
+ 
+            <Route path="/single/:id" render = {(params) => (
+                  // <Single  {...params} {...this.props} />			// pass params after props as below becoz match obj in this.props overides match of params . so w
+            	   <Single  {...this.props} {...params}/>                   // -- so will get params undefined becoz match obj is overided by this.props where match is null
+		 )}/>
+
+Create Single.js file for above single component
+
+In Single.js   -->    
+
+	class Single extends Component {
+		console.log(this.props.match.params);                                          // match has params of route so we can access & use in file
+		      const {match, posts} = this.props                                        // same as match = this.props.match & post = this.props.posts 
+        		const id = Number(match.params.id)
+        		const post = posts.find((post) => post.id === id)			       //take id from param & find in array of posts & display it passing to photo comp
+ 			const comments = this.props.comment;                                     // intial set of comments from reducer loaded here
+    		render() { 
+                 <> 
+ 			<Photo post={post}  />									 // need to {...this.props} , becoz the event handlers attached to it throws error	
+                  <Comments addComment={this.props.addComment} comments={comments} />				       // we need to pass the addcomment action event has props
+			<>	
+               } 
+	}
+
+Create Comments.js file for single post to display besdie comment section
+
+In Comments.js   -->   
+--------------
+
+   handleSubmit(event) {
+        const comment = event.target.elements.comment.value       
+        this.props.addComment(comment)				// submit button will dispatch/emit the action event & has payload  next goes to action.js file
+    }
+	
+ render() {
+       return <div className="comment">
+       {
+           this.props.comments.map((comment, index) => { return ( <p key={index}> {comment} </p> ) })
+       }
+            <form className="comment-form" onSubmit={this.handleSubmit}> 				  // create form for adding comments & add submit button
+                <input type="text" placeholder="comment" name="comment"/>
+                <input type="submit" hidden/>
+            </form>
+           
+         </div>
+    }
+
+
+In reducer.js   -->  first create one more reducer for another comments state,becoz each state has each reducer
+--------------
+
+	function comments(state=[], action) {								// comments reducer, so now two reducers should combine & pass both to store 
+    		switch (action.type) {
+        		case 'ADD_COMMENT':  
+				return {...state,action.comment}
+        			default: return state
+    				}
+	}
+
+	function posts(state = _posts, action) {
+    		switch (action.type) {
+     			...
+	}	}
+	
+	const rootReducer = combineReducers({posts, comments})					// comibining two reducers & passing to store in index.js file as rootreducer
+	export default rootReducer
+
+In Index.js   -->
+-----------
+	const store = createStore(rootReducer, ...)	
+
+In action.js   -->
+-------------
+	
+	export function addPost(post) { ... }
+
+	export function addComment(comment) {		// it will first come to this file when event emits & goes to reducers.js file & find particular reducer that is responsible
+    		return {							// -- to update state 
+        		type: 'ADD_COMMENT',
+        		comment,
+    	}}
+
+** whem particular 1 action event emits ... all the reducers will get executed by default , but we need to handle using switch statement to excute particular emited action type in reducer
+
+** comments will updated to all posts if we update in 1 post to avoid do following chnages.
+
+
+ex 14 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: Adding comment  for respective posts 
+
+In payload along with post data , need to pass particular post.id as well to display respective post comments as below.s
+
+In App.js	  -->
+-----------
+		function mapStateToProps(state) {
+    			return {
+        			posts: state.posts,
+        			comments: state.comments										     // now we need to write specific state names becox of multiple states
+    			}
+		}
+
+		function mapDispatchToProps(dispatch) {
+   	 		return bindActionCreators(actions, dispatch)
+		}
+
+In Single.js   -->  
+-----------	  	
+                 const id = Number(match.params.id) 
+		     const comments = this.props.comments[match.params.id] || []							  // instead comments array all, passing only specific postId comments
+           	     <Photo post={post} {...this.props} index={index}/>
+                 <Comments addComment={this.props.addComment} comments={comments} id = {id}/>                       // pass id taken from param 
+
+In Comments.js -->
+--------------			
+   			handleSubmit(event) {
+        			const comment = event.target.elements.comment.value       
+        			this.props.addComment(comment, this.props.id)'							// pass this.props.id for action event method, comment is of specific post
+    			}
+
+In action.js  --> 
+------------
+		export function addComment(comment, postId) {
+    			return {
+        			type: 'ADD_COMMENT',
+        			comment,
+        			postId														    // added postId for action methods
+    			}
+		}
+
+In reducer.js  -->
+------------		
+		function comments(state={}, action) {
+    			switch (action.type) {
+        			case 'ADD_COMMENT':  
+        
+        				if (!state[action.postId]) {
+            				return {...state, [action.postId]: [action.comment]}				// [action.postId] this is how we pass properties for object, it is key
+        				} else {
+            				return {...state, [action.postId]: [...state[action.postId], action.comment] }	// action.comment is present comm with old state comments using ,
+        				}
+    				}
+			}
+
+
+ex 14 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: Adding comment counts
+
+In Photo.js -->
+----------
+			<fig>
+  			   ...	<img <Link> ... 
+			   <Link className="button" to={`/single/${post.id}`}> 
+                    	<div className="comment-count"> 
+                        <div className="speech-bubble"> </div>
+                        	{props.comments[post.id] ? props.comments[post.id].length : 0 }			// adding length
+                    	</div>
+                		</Link>
+			</fig>
+
+In AddPhoto.js -->
+------------
+		handleSubmit(event) {
+			...
+            	this.props.addPost(post)
+            	this.props.onHistory.push('/')										// after adding post naviagting main page 
+        	}
+
